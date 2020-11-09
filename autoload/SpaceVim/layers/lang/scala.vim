@@ -1,7 +1,7 @@
 "=============================================================================
 " scala.vim --- SpaceVim lang#scala layer
-" Copyright (c) 2016-2020 Wang Shidong & Contributors
-" Author: Wang Shidong < wsdjeg at 163.com >
+" Copyright (c) 2020 Jim Miller
+" Author: Jim Miller < miller.jimd at gmail.com >
 " URL: https://spacevim.org
 " License: GPLv3
 "=============================================================================
@@ -137,201 +137,39 @@ scriptencoding utf-8
 "     to format code.
 
 
-function! SpaceVim#layers#lang#scala#plugins() abort
-  let plugins = [ 
-        \ ['derekwyatt/vim-scala', {'on_ft': 'scala'}],
-        \ ]
-  if has('python3') || has('python')
-    call add(plugins, ['ensime/ensime-vim', {'on_ft': 'scala'}])
-  endif
-  return plugins
-endfunction
-
-
 function! SpaceVim#layers#lang#scala#config() abort
-  let g:scala_use_default_keymappings = 0
   call SpaceVim#mapping#space#regesit_lang_mappings('scala', function('s:language_specified_mappings'))
   call SpaceVim#plugins#repl#reg('scala', 'scala')
-  call SpaceVim#plugins#runner#reg_runner('scala', 'sbt run')
-  call SpaceVim#mapping#gd#add('scala', function('s:go_to_def'))
   call add(g:spacevim_project_rooter_patterns, 'build.sbt')
   augroup SpaceVim_lang_scala
     au!
-    autocmd BufRead,BufNewFile *.sbt set filetype=scala
+    au BufRead,BufNewFile *.sbt,*sc set filetype=scala
   augroup END
 
-  let g:neoformat_enabled_scala = neoformat#formatters#scala#enabled()
-  let g:neoformat_scala_scalariform = {
-        \ 'exe': 'java',
-        \ 'args': ['-jar', get(g:,'spacevim_layer_lang_scala_formatter', ''), '-'],
-        \ 'stdin': 1,
-        \ }
 endfunction
 
-
 function! s:language_specified_mappings() abort
-  " ensime-vim {{{
-  if exists(':EnTypeCheck')
-    nnoremap <silent><buffer> <F4>     :EnSuggestImport<CR>
-    inoremap <silent><buffer> <F4>     <esc>:EnSuggestImport<CR>
-    inoremap <silent><buffer> <c-;>i   <esc>:EnAddImport<CR>
-    inoremap <silent><buffer> <c-;>o   <esc>:EnOrganizeImports<CR>
-    if !SpaceVim#layers#lsp#check_filetype('scala')
-      nnoremap <silent><buffer> K      :EnDocBrowse<CR>
-    endif
 
-    call SpaceVim#mapping#space#langSPC('nnoremap', ['l','Q'],
-          \ 'EnInstall',
-          \ 'bootstrap server when first-time-use', 1)
-    call SpaceVim#mapping#space#langSPC('nnoremap', ['l','h'],
-          \ 'EnDocBrowse',
-          \ 'show Documentation of cursor symbol', 1)
-    call SpaceVim#mapping#space#langSPC('nnoremap', ['l','e'],
-          \ 'EnRename',
-          \ 'Rename cursor symbol', 1)
-    call SpaceVim#mapping#space#langSPC('nnoremap', ['l','n'],
-          \ 'EnInline',
-          \ 'Inline local refactoring of cursor symbol', 1)
-    call SpaceVim#mapping#space#langSPC('nnoremap', ['l','g'],
-          \ 'EnDeclarationSplit v',
-          \ 'find Definition of cursor symbol', 1)
-    xnoremap <silent><buffer> <space>lt :EnType selection<CR>
-    call SpaceVim#mapping#space#langSPC('nnoremap', ['l','t'],
-          \ 'EnType',
-          \ 'show Type of expression of cursor symbol', 1)
-    call SpaceVim#mapping#space#langSPC('nnoremap', ['l','p'],
-          \ 'EnShowPackage',
-          \ 'show Hierarchical view of a package', 1)
-    call SpaceVim#mapping#space#langSPC('nnoremap', ['l','u'],
-          \ 'EnUsages',
-          \ 'find Usages of cursor symbol', 1)
-
-    " debug {{{
-    let g:_spacevim_mappings_space.l.d = {'name' : '+Debug'}
-    call SpaceVim#mapping#space#langSPC('nnoremap', ['l','d','t'],
-          \ 'EnDebugBacktrace',
-          \ 'show debug stack trace of current frame', 1)
-    call SpaceVim#mapping#space#langSPC('nnoremap', ['l','d','c'],
-          \ 'EnDebugContinue',
-          \ 'continue the execution', 1)
-    call SpaceVim#mapping#space#langSPC('nnoremap', ['l','d','b'],
-          \ 'EnDebugSetBreak',
-          \ 'set a breakpoint for the current line', 1)
-    call SpaceVim#mapping#space#langSPC('nnoremap', ['l','d','B'],
-          \ 'EnDebugClearBreaks',
-          \ 'clear all breakpoints', 1)
-    call SpaceVim#mapping#space#langSPC('nnoremap', ['l','d','l'],
-          \ 'EnDebugStart',
-          \ 'launching debugger', 1)
-    call SpaceVim#mapping#space#langSPC('nnoremap', ['l','d','i'],
-          \ 'EnDebugStep',
-          \ 'step into next statement', 1)
-    nnoremap <buffer><F7>    :EnDebugStep<CR>
-    call SpaceVim#mapping#space#langSPC('nnoremap', ['l','d','o'],
-          \ 'EnDebugNext',
-          \ 'step over next statement', 1)
-    nnoremap <buffer><F8>    :EnDebugNext<CR>
-    call SpaceVim#mapping#space#langSPC('nnoremap', ['l','d','O'],
-          \ 'EnDebugNext',
-          \ 'step out of current function', 1)
-    "}}}
-
-    " import {{{
-    let g:_spacevim_mappings_space.l.i = {'name' : '+Import'}
-    call SpaceVim#mapping#space#langSPC('nnoremap', ['l','i','i'],
-          \ 'EnSuggestImport',
-          \ 'Show candidates for importing of cursor symbol', 1)
-    call SpaceVim#mapping#space#langSPC('nnoremap', ['l','i','q'],
-          \ 'EnAddImport',
-          \ 'Prompt for a qualified import', 1)
-    call SpaceVim#mapping#space#langSPC('nnoremap', ['l','i','o'],
-          \ 'EnOrganizeImports',
-          \ 'Organize imports of current file', 1) " }}}
-    " }}}
-  endif
-
-  " import `vim-scala`
-  let g:_spacevim_mappings_space.l.i = {'name' : '+Import'}
-  inoremap <silent><buffer> <C-;>s   <Esc>:SortScalaImports<CR>
-  call SpaceVim#mapping#space#langSPC('nnoremap', ['l','i','s'],
-        \ 'SortScalaImports', 'sort imports', 1)
-
-  if SpaceVim#layers#lsp#check_filetype('scala') && executable('metals-vim')
-    nnoremap <silent><buffer> K :call SpaceVim#lsp#show_doc()<CR>
-    call SpaceVim#mapping#space#langSPC('nnoremap', ['l', 'd'],
-          \ 'call SpaceVim#lsp#show_doc()', 'show Document', 1)
-    call SpaceVim#mapping#space#langSPC('nnoremap', ['l', 'e'],
-          \ 'call SpaceVim#lsp#rename()()', 'rename Symbol', 1)
-    call SpaceVim#mapping#space#langSPC('nnoremap', ['l', 'g'],
-          \ 'call SpaceVim#lsp#go_to_def()', 'goto Definition', 1)
-    call SpaceVim#mapping#space#langSPC('nnoremap', ['l', 'u'],
-          \ 'call SpaceVim#lsp#references()', 'find References', 1)
-  endif
+  nnoremap <silent><buffer> K :call SpaceVim#lsp#show_doc()<CR>
+  nmap <Leader>ws <Plug>(coc-metals-expand-decoration)
+  call SpaceVim#mapping#space#langSPC('nnoremap', ['l', 'd'],
+        \ 'call SpaceVim#lsp#show_doc()', 'show Document', 1)
+  call SpaceVim#mapping#space#langSPC('nnoremap', ['l', 'e'],
+        \ 'call SpaceVim#lsp#rename()()', 'rename Symbol', 1)
+  call SpaceVim#mapping#space#langSPC('nnoremap', ['l', 'g'],
+        \ 'call SpaceVim#lsp#go_to_def()', 'goto Definition', 1)
+  call SpaceVim#mapping#space#langSPC('nnoremap', ['l', 'u'],
+        \ 'call SpaceVim#lsp#references()', 'find References', 1)
+  call SpaceVim#mapping#space#langSPC('nnoremap', ['l', 'u'],
+        \ 'call SpaceVim#lsp#references()', 'find References', 1)
+  call SpaceVim#mapping#space#langSPC('nnoremap', ['e', 'l'],
+        \ 'CocList diagnostics', 'list Diagnostics', 1)
 
   " code runner
   call SpaceVim#mapping#space#langSPC('nmap', ['l','r'],
         \ 'call SpaceVim#plugins#runner#open()', 'execute current file', 1)
 
-  " Sbt
-  let g:_spacevim_mappings_space.l.b = {'name' : '+Sbt'}
-  if exists(':EnTypeCheck')
-    call SpaceVim#mapping#space#langSPC('nnoremap', ['l','b', 'e'], 'call call('
-          \ . string(function('s:execCMD')) . ', ["sbt ensimeConfig"])',
-          \ 'generate-.ensime-file', 1)
-  endif
-
-  call SpaceVim#mapping#space#langSPC('nnoremap', ['l','b', 'c'], 'call call('
-        \ . string(function('s:execCMD')) . ', ["sbt ~compile"])',
-        \ 'continuous-compile', 1)
-  call SpaceVim#mapping#space#langSPC('nnoremap', ['l','b', 'C'], 'call call('
-        \ . string(function('s:execCMD')) . ', ["sbt clean compile"])',
-        \ 'clean-compile', 1)
-  call SpaceVim#mapping#space#langSPC('nnoremap', ['l','b', 't'], 'call call('
-        \ . string(function('s:execCMD')) . ', ["sbt test"])',
-        \ 'sbt-test', 1)
-  call SpaceVim#mapping#space#langSPC('nnoremap', ['l','b', 'p'], 'call call('
-        \ . string(function('s:execCMD')) . ', ["sbt package"])',
-        \ 'sbt-package-jar', 1)
-  call SpaceVim#mapping#space#langSPC('nnoremap', ['l','b', 'd'], 'call call('
-        \ . string(function('s:execCMD')) . ', ["sbt inspect tree compile:sources"])',
-        \ 'show-dependencies-tree', 1)
-  call SpaceVim#mapping#space#langSPC('nnoremap', ['l','b', 'l'], 'call call('
-        \ . string(function('s:execCMD')) . ', ["sbt reload"])',
-        \ 'reload-build-definition', 1)
-  call SpaceVim#mapping#space#langSPC('nnoremap', ['l','b', 'u'], 'call call('
-        \ . string(function('s:execCMD')) . ', ["sbt update"])',
-        \ 'update-external-dependencies', 1)
-  call SpaceVim#mapping#space#langSPC('nnoremap', ['l','b', 'r'], 'call call('
-        \ . string(function('s:execCMD')) . ', ["sbt run"])',
-        \ 'sbt-run', 1)
-
   " REPL
-  let g:_spacevim_mappings_space.l.s = {'name' : '+Send'}
-  call SpaceVim#mapping#space#langSPC('nmap', ['l','s', 'i'],
-        \ 'call SpaceVim#plugins#repl#start("scala")',
-        \ 'start REPL process', 1)
-  call SpaceVim#mapping#space#langSPC('nmap', ['l','s', 'l'],
-        \ 'call SpaceVim#plugins#repl#send("line")',
-        \ 'send line and keep code buffer focused', 1)
-  call SpaceVim#mapping#space#langSPC('nmap', ['l','s', 'b'],
-        \ 'call SpaceVim#plugins#repl#send("buffer")',
-        \ 'send buffer and keep code buffer focused', 1)
-  call SpaceVim#mapping#space#langSPC('nmap', ['l','s', 's'],
-        \ 'call SpaceVim#plugins#repl#send("selection")',
-        \ 'send selection and keep code buffer focused', 1)
-endfunction
-
-
-function! s:go_to_def() abort
-  if SpaceVim#layers#lsp#check_filetype('scala') && executable('metals-vim')
-    call SpaceVim#lsp#go_to_def()
-  else
-    EnDeclarationSplit v
-  endif
-endfunction
-
-function! s:execCMD(cmd) abort
-  call SpaceVim#plugins#runner#open(a:cmd)
 endfunction
 
 " vim:set et sw=2 cc=80:
